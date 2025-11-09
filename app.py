@@ -7,8 +7,15 @@ from dateutil import parser as date_parser
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 app = Flask(__name__)
-app.config['APPLICATION_ROOT'] = '/fragments'
-app.wsgi_app = ProxyFix(app.wsgi_app, x_prefix=1)
+
+# Configure for reverse proxy
+app.wsgi_app = ProxyFix(
+    app.wsgi_app,
+    x_for=1,
+    x_proto=1,
+    x_host=1,
+    x_prefix=1
+)
 
 # Helper function to get all posts
 def get_posts():
@@ -93,6 +100,10 @@ def get_post(slug):
     return None
 
 # Routes
+@app.route('/fragments/static/<path:filename>')
+def static_files(filename):
+    return app.send_static_file(filename)
+    
 @app.route('/fragments/')
 @app.route('/fragments')
 def index():
