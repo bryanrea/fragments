@@ -4,8 +4,11 @@ import frontmatter
 import os
 from datetime import datetime
 from dateutil import parser as date_parser
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 app = Flask(__name__)
+app.config['APPLICATION_ROOT'] = '/fragments'
+app.wsgi_app = ProxyFix(app.wsgi_app, x_prefix=1)
 
 # Helper function to get all posts
 def get_posts():
@@ -90,13 +93,14 @@ def get_post(slug):
     return None
 
 # Routes
-@app.route('/')
+@app.route('/fragments/')
+@app.route('/fragments')
 def index():
     """Homepage - list all blog posts"""
     posts = get_posts()
     return render_template('index.html', posts=posts)
 
-@app.route('/post/<slug>')
+@app.route('/fragments/post/<slug>')
 def post(slug):
     """Individual post page"""
     post_data = get_post(slug)
