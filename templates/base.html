@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="{% block meta_description %}Fragments - A lightweight, AI-built blog{% endblock %}">
+    <title>{% block title %}Fragments{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1><a href="{{ url_for('index') }}">Fragments</a></h1>
+            <p class="tagline">Building with AI, in public</p>
+        </div>
+    </header>
+
+    <main class="container">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>Built with AI • <a href="https://github.com/bryanrea/fragments" target="_blank">View Source</a></p>
+        </div>
+    </footer>
+</body>
+</html>
