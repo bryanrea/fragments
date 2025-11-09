@@ -1,4 +1,4 @@
-from flask import Flask, render_template, abort
+from flask import Flask, render_template, abort, Blueprint, redirect, url_for
 import markdown
 import frontmatter
 import os
@@ -99,19 +99,24 @@ def get_post(slug):
     
     return None
 
+# Create a blueprint with url_prefix
+fragments_bp = Blueprint(
+    'fragments',
+    __name__,
+    url_prefix='/fragments',
+    template_folder='templates',
+    static_folder='static'
+)
+
+
 # Routes
-@app.route('/fragments/static/<path:filename>')
-def static_files(filename):
-    return app.send_static_file(filename)
-    
-@app.route('/fragments/')
-@app.route('/fragments')
+@fragments_bp.route('/', strict_slashes=False)
 def index():
     """Homepage - list all blog posts"""
     posts = get_posts()
     return render_template('index.html', posts=posts)
 
-@app.route('/fragments/post/<slug>')
+@fragments_bp.route('/post/<slug>')
 def post(slug):
     """Individual post page"""
     post_data = get_post(slug)
@@ -121,10 +126,21 @@ def post(slug):
     
     return render_template('post.html', post=post_data)
 
+
+# Register blueprint
+app.register_blueprint(fragments_bp)
+
+
 @app.errorhandler(404)
 def page_not_found(e):
     """Custom 404 page"""
     return render_template('404.html'), 404
+
+
+@app.route('/')
+def root():
+    """Redirect root to fragments homepage"""
+    return redirect(url_for('fragments.index'))
 
 # Run the app
 if __name__ == '__main__':
