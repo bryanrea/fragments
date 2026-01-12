@@ -1,6 +1,6 @@
 ---
 title: "Progress Over Perfection"
-date: 2026-12-01
+date: 2026-01-12
 excerpt: "How I learned to stop worrying about perfect and started shipping again"
 ---
 
