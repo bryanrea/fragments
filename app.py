@@ -1,4 +1,4 @@
-from flask import Flask, render_template, abort, Blueprint, redirect, url_for
+from flask import Flask, render_template, abort, Blueprint, redirect, url_for, Response
 import markdown
 import frontmatter
 import os
@@ -99,6 +99,12 @@ def get_post(slug):
     
     return None
 
+def get_file_modification_time(filepath):
+    """Get the last modification time of a file as a datetime object."""
+    if os.path.exists(filepath):
+        return datetime.fromtimestamp(os.path.getmtime(filepath))
+    return None
+
 # Create a blueprint with url_prefix
 fragments_bp = Blueprint(
     'fragments',
@@ -126,6 +132,68 @@ def post(slug):
     
     return render_template('post.html', post=post_data)
 
+@app.route('/sitemap.xml')
+def site_sitemap():
+    """Generate XML sitemap for entire bryanrea.com site"""
+    base_url = 'https://bryanrea.com'
+    
+    # Start building XML
+    xml_parts = ['<?xml version="1.0" encoding="UTF-8"?>']
+    xml_parts.append('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">')
+    
+    # Static pages on main site
+    static_pages = [
+        {'loc': f'{base_url}/', 'priority': '1.0', 'changefreq': 'monthly'},
+        {'loc': f'{base_url}/archive', 'priority': '0.6', 'changefreq': 'yearly'},
+        {'loc': f'{base_url}/resume.pdf', 'priority': '0.8', 'changefreq': 'monthly'},
+        {'loc': f'{base_url}/fragments', 'priority': '0.9', 'changefreq': 'weekly'},
+    ]
+    
+    for page in static_pages:
+        xml_parts.append('  <url>')
+        xml_parts.append(f'    <loc>{page["loc"]}</loc>')
+        xml_parts.append(f'    <changefreq>{page["changefreq"]}</changefreq>')
+        xml_parts.append(f'    <priority>{page["priority"]}</priority>')
+        xml_parts.append('  </url>')
+    
+    # Add all blog posts
+    posts = get_posts()
+    for post in posts:
+        # Get last modification time from file
+        posts_dir = 'posts'
+        filename = post.get('filename', '')
+        if filename:
+            filepath = os.path.join(posts_dir, filename)
+            lastmod = get_file_modification_time(filepath)
+        else:
+            lastmod = post.get('date')
+        
+        # Format lastmod date
+        if lastmod:
+            if isinstance(lastmod, str):
+                try:
+                    lastmod = date_parser.parse(lastmod)
+                except:
+                    lastmod = None
+            if lastmod and isinstance(lastmod, datetime):
+                lastmod_str = lastmod.strftime('%Y-%m-%d')
+            else:
+                lastmod_str = None
+        else:
+            lastmod_str = None
+        
+        xml_parts.append('  <url>')
+        xml_parts.append(f'    <loc>{base_url}/fragments/post/{post["slug"]}</loc>')
+        if lastmod_str:
+            xml_parts.append(f'    <lastmod>{lastmod_str}</lastmod>')
+        xml_parts.append('    <changefreq>monthly</changefreq>')
+        xml_parts.append('    <priority>0.7</priority>')
+        xml_parts.append('  </url>')
+    
+    xml_parts.append('</urlset>')
+    
+    xml_content = '\n'.join(xml_parts)
+    return Response(xml_content, mimetype='application/xml')
 
 # Register blueprint
 app.register_blueprint(fragments_bp)
