@@ -1,6 +1,9 @@
 # Logs
 *.log
 
+# Drafts
+/posts/drafts
+
 
 # OS files
 Thumbs.db
